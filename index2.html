@@ -1,33 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AI 응원 카운터</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }
-        input[type="text"] { padding: 10px; width: 250px; border-radius: 5px; border: 1px solid #ddd; }
-        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .ai-box { margin-top: 20px; padding: 15px; background-color: #e8f5e9; border-radius: 10px; color: #2e7d32; font-weight: bold; }
+        /* 기본 배경 설정 */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* 화면 높이에 꽉 차게 */
+        }
+
+        /* 카드 레이아웃 (노트 20 너비에 최적화) */
+        .card { 
+            background: white; 
+            width: 90%;            /* 모바일에서 양옆 여백 확보 */
+            max-width: 400px;      /* PC에서도 너무 커지지 않게 제한 */
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); 
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 { color: #1a73e8; font-size: 1.5rem; margin-bottom: 10px; }
+        p { color: #5f6368; line-height: 1.5; }
+        
+        /* 방문자 숫자 강조 */
+        .count-badge {
+            font-size: 2.2rem;
+            color: #ff5722;
+            font-weight: 800;
+            display: block;
+            margin: 10px 0;
+        }
+
+        hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
+
+        /* 입력창 디자인 */
+        input[type="text"] { 
+            padding: 15px; 
+            width: 100%; 
+            border-radius: 12px; 
+            border: 1px solid #ddd; 
+            box-sizing: border-box; /* 패딩이 너비에 포함되게 */
+            font-size: 16px;        /* 아이폰/갤럭시에서 클릭 시 화면 확대 방지 */
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        input[type="text"]:focus { border-color: #1a73e8; }
+
+        /* 버튼 디자인 (누르기 쉽게 크게) */
+        button { 
+            width: 100%;
+            padding: 15px; 
+            background-color: #1a73e8; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:active { background-color: #1557b0; transform: scale(0.98); }
+
+        /* AI 응원 박스 */
+        .ai-box { 
+            margin-top: 25px; 
+            padding: 15px; 
+            background-color: #f8f9fa; 
+            border-left: 5px solid #34a853;
+            border-radius: 10px; 
+            text-align: left;
+        }
+        .user-text { font-size: 0.9rem; color: #888; margin-bottom: 5px; }
+        .ai-text { font-size: 1rem; color: #202124; line-height: 1.4; font-weight: 500; }
+        
+        /* 🤖 로봇 아이콘 대용 */
+        .robot-emoji { font-size: 2rem; display: block; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>축하합니다! ✨</h1>
-        <p>당신은 오늘 <strong>{{ count }}</strong>번째 방문자입니다.</p>
+        <span class="robot-emoji">✨</span>
+        <h1>방문 축하합니다!</h1>
+        <p>오늘의 <span class="count-badge">{{ count }}</span> 번째 행운의 주인공!</p>
         
         <hr>
         
-        <p>오늘 기분은 어떠신가요? AI에게 들려주세요.</p>
+        <p>오늘 하루 어떠셨나요?<br>AI 친구에게 짧게 들려주세요.</p>
         <form action="/ask" method="post">
-            <input type="text" name="user_input" placeholder="예: 오늘 시험 합격했어!" required>
-            <button type="submit">AI 응원받기</button>
+            <input type="text" name="user_input" placeholder="기분이나 소식을 적어보세요" required>
+            <button type="submit">AI 응원 메시지 받기</button>
         </form>
 
         {% if ai_msg %}
         <div class="ai-box">
-            <p>나의 말: {{ user_text }}</p>
-            <p>🤖 AI의 응원: {{ ai_msg }}</p>
+            <div class="user-text">나의 말: {{ user_text }}</div>
+            <div class="ai-text">🤖 {{ ai_msg }}</div>
         </div>
         {% endif %}
     </div>
