@@ -77,6 +77,9 @@ async def ask_ai(request: Request, user_input: str = Form(...)):
             response = client.models.generate_content(
                 model="gemini-3-flash-preview",
                 contents=f"사용자가 이렇게 말했어: '{user_input}'. 이 사람에게 아주 다정하고 짧은 응원 메시지를 한 줄로 해줘."
+                "1. 사용자가 사용한 언어를 감지해줘"
+                "2. 그 언어에 맞춰서 아주 다정하고 짧은 응원 메시지를 한 줄로 해줘"
+                "3. 만약 언어를 알 수 없다면 한국어로 대답해줘"
             )
             ai_msg = response.text
         except Exception as e:
