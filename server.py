@@ -1,10 +1,10 @@
 import os
 import uvicorn
-import google.generativeai as genai
+from google import genai  # 최신 구글 AI 라이브러리
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -12,14 +12,18 @@ from sqlalchemy.orm import sessionmaker
 DB_URL = os.getenv("DATABASE_URL")
 AI_KEY = os.getenv("GEMINI_API_KEY")
 
-# Gemini AI 설정
-genai.configure(api_key=AI_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+# 최신 Gemini AI 클라이언트 설정
+if AI_KEY:
+    client = genai.Client(api_key=AI_KEY)
+else:
+    client = None
 
+# DB 연결 설정
 engine = create_engine(DB_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
+# DB 모델 정의
 class Visitor(Base):
     __tablename__ = "visitors"
     id = Column(Integer, primary_key=True, index=True)
@@ -28,33 +32,55 @@ class Visitor(Base):
 app = FastAPI()
 templates = Jinja2Templates(directory=".")
 
+# --- 2. 메인 화면 (GET) ---
 @app.get("/", response_class=HTMLResponse)
 async def read_index(request: Request):
     db = SessionLocal()
-    visitor = db.query(Visitor).first()
-    if not visitor:
-        visitor = Visitor(count=0)
-        db.add(visitor)
-    visitor.count += 1
-    db.commit()
-    current_count = visitor.count
-    db.close()
+    try:
+        visitor = db.query(Visitor).first()
+        if not visitor:
+            visitor = Visitor(count=0)
+            db.add(visitor)
+            db.commit()
+            db.refresh(visitor)
+        
+        # 방문 횟수 증가
+        visitor.count += 1
+        db.commit()
+        current_count = visitor.count
+    except Exception as e:
+        print(f"DB Error: {e}")
+        current_count = "Error"
+    finally:
+        db.close()
     
-    # 처음 접속했을 때는 AI 메시지가 없으므로 빈 값을 보냅니다.
-    return templates.TemplateResponse("index2.html", {"request": request, "count": current_count, "ai_msg": ""})
+    return templates.TemplateResponse("index2.html", {
+        "request": request, 
+        "count": current_count, 
+        "ai_msg": "",
+        "user_text": ""
+    })
 
+# --- 3. AI 응원 요청 (POST) ---
 @app.post("/ask", response_class=HTMLResponse)
 async def ask_ai(request: Request, user_input: str = Form(...)):
-    # 1. DB에서 현재 카운트 가져오기
+    # DB에서 현재 카운트 가져오기
     db = SessionLocal()
     visitor = db.query(Visitor).first()
     current_count = visitor.count if visitor else 0
     db.close()
 
-    # 2. Gemini AI에게 메시지 부탁하기
-    prompt = f"사용자가 이렇게 말했어: '{user_input}'. 이 사람에게 아주 다정하고 짧은 응원 메시지를 한 줄로 해줘."
-    response = model.generate_content(prompt)
-    ai_msg = response.text
+    # Gemini AI에게 응원 메시지 요청
+    ai_msg = "AI 키가 설정되지 않았습니다."
+    if client:
+        try:
+            response = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=f"사용자가 이렇게 말했어: '{user_input}'. 이 사람에게 아주 다정하고 짧은 응원 메시지를 한 줄로 해줘."
+            )
+            ai_msg = response.text
+        except Exception as e:
+            ai_msg = f"AI 호출 중 오류가 발생했습니다: {e}"
 
     return templates.TemplateResponse("index2.html", {
         "request": request, 
@@ -64,5 +90,6 @@ async def ask_ai(request: Request, user_input: str = Form(...)):
     })
 
 if __name__ == "__main__":
+    # Render 환경에 맞는 포트 설정
     port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
