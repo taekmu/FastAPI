@@ -1,10 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>내 서비스</title>
+    <meta charset="UTF-8">
+    <title>AI 응원 카운터</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }
+        input[type="text"] { padding: 10px; width: 250px; border-radius: 5px; border: 1px solid #ddd; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .ai-box { margin-top: 20px; padding: 15px; background-color: #e8f5e9; border-radius: 10px; color: #2e7d32; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <h1>방문을 환영합니다!</h1>
-    <p>현재까지 총 <strong>{{ count }}</strong>번 접속되었습니다.</p>
+    <div class="card">
+        <h1>축하합니다! ✨</h1>
+        <p>당신은 오늘 <strong>{{ count }}</strong>번째 방문자입니다.</p>
+        
+        <hr>
+        
+        <p>오늘 기분은 어떠신가요? AI에게 들려주세요.</p>
+        <form action="/ask" method="post">
+            <input type="text" name="user_input" placeholder="예: 오늘 시험 합격했어!" required>
+            <button type="submit">AI 응원받기</button>
+        </form>
+
+        {% if ai_msg %}
+        <div class="ai-box">
+            <p>나의 말: {{ user_text }}</p>
+            <p>🤖 AI의 응원: {{ ai_msg }}</p>
+        </div>
+        {% endif %}
+    </div>
 </body>
 </html>
