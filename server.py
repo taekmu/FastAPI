@@ -75,7 +75,7 @@ async def ask_ai(request: Request, user_input: str = Form(...)):
     if client:
         try:
             response = client.models.generate_content(
-                model="gemini-1.5-flash",
+                model="models/gemini-1.5-flash",
                 contents=f"사용자가 이렇게 말했어: '{user_input}'. 이 사람에게 아주 다정하고 짧은 응원 메시지를 한 줄로 해줘."
             )
             ai_msg = response.text
